@@ -11,7 +11,7 @@ module.exports = {
         surface: '#111110',
         ink: '#e8e0d0',
         muted: '#4a4840',
-        accent: '#c8a96e',
+        accent: '#7ab896',
       },
       fontFamily: {
         editor: ['"Courier Prime"', 'Courier', 'monospace'],

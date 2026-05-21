@@ -18,14 +18,30 @@
     }
     @keyframes flashAccent {
       0%   { color: #4a4840; }
-      20%  { color: #c8a96e; }
+      20%  { color: #7ab896; }
       100% { color: #4a4840; }
     }
     .flash {
       animation: flashAccent 1s ease forwards;
     }
-    textarea {
-      field-sizing: content;
+    body {
+      overflow: hidden;
+    }
+    textarea::-webkit-scrollbar {
+      width: 4px;
+    }
+    textarea::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    textarea::-webkit-scrollbar-thumb {
+      background-color: transparent;
+      border-radius: 2px;
+    }
+    textarea.is-scrolling::-webkit-scrollbar-thumb {
+      background-color: rgba(122, 184, 150, 0.35);
+    }
+    textarea.is-scrolling::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(122, 184, 150, 0.6);
     }
   </style>
 </head>
@@ -52,7 +68,7 @@
       x-model="content"
       @input="updateCounts()"
       class="w-full bg-transparent text-ink font-editor resize-none outline-none border-none focus:ring-0 text-writing"
-      style="min-height: calc(100vh - 220px); caret-color: #c8a96e;"
+      style="height: calc(100vh - 240px); overflow-y: auto; caret-color: #7ab896;"
       placeholder=""
       spellcheck="true"
       autocomplete="off"
@@ -101,7 +117,15 @@
 
         init() {
           this.noFsApi = typeof window.showOpenFilePicker === 'undefined'
-          this.$nextTick(() => this.$refs.editor.focus())
+          this.$nextTick(() => {
+            this.$refs.editor.focus()
+            let scrollTimer
+            this.$refs.editor.addEventListener('scroll', () => {
+              this.$refs.editor.classList.add('is-scrolling')
+              clearTimeout(scrollTimer)
+              scrollTimer = setTimeout(() => this.$refs.editor.classList.remove('is-scrolling'), 1000)
+            })
+          })
         },
 
         updateCounts() {
