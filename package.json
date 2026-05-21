@@ -2,8 +2,8 @@
   "name": "folio",
   "version": "1.0.0",
   "scripts": {
-    "build": "tailwindcss -i ./src/input.css -o ./dist/index.css --minify && cp src/index.html dist/index.html",
-    "dev": "concurrently \"tailwindcss -i ./src/input.css -o ./dist/index.css --watch\" \"npx serve dist\""
+    "build": "tailwindcss -i ./src/input.css -o ./docs/index.css --minify && cp src/index.html docs/index.html",
+    "dev": "concurrently \"tailwindcss -i ./src/input.css -o ./docs/index.css --watch\" \"npx serve docs\""
   },
   "devDependencies": {
     "tailwindcss": "^3.4.0",

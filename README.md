@@ -30,7 +30,7 @@ Open `http://localhost:3000` in your browser.
 npm run build
 ```
 
-Outputs to `dist/` — serve `dist/index.html` directly, no backend needed.
+Outputs to `docs/` — served via GitHub Pages, or open `docs/index.html` directly.
 
 ## Stack
 
