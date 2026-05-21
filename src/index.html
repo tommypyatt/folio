@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Folio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./index.css" />
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+      animation: fadeIn 0.6s ease forwards;
+    }
+    @keyframes flashAccent {
+      0%   { color: #4a4840; }
+      20%  { color: #c8a96e; }
+      100% { color: #4a4840; }
+    }
+    .flash {
+      animation: flashAccent 1s ease forwards;
+    }
+    textarea {
+      field-sizing: content;
+    }
+  </style>
+</head>
+<body
+  class="bg-background text-ink font-ui"
+  x-data="writer()"
+  x-init="init()"
+  @keydown.ctrl.o.window.prevent="openFile()"
+  @keydown.ctrl.s.window.prevent="saveFile()"
+>
+
+  <!-- Watermark -->
+  <div class="text-center pt-10 pb-2 fade-in">
+    <span class="font-ui text-xs tracking-widest uppercase opacity-20 select-none"
+          style="font-variant: small-caps; letter-spacing: 0.3em;">
+      Folio
+    </span>
+  </div>
+
+  <!-- Writing column -->
+  <main class="mx-auto px-6 pb-24 fade-in" style="max-width: 680px; padding-top: 80px;">
+    <textarea
+      x-ref="editor"
+      x-model="content"
+      @input="updateCounts()"
+      class="w-full bg-transparent text-ink font-editor resize-none outline-none border-none focus:ring-0 text-writing"
+      style="min-height: calc(100vh - 220px); caret-color: #c8a96e;"
+      placeholder=""
+      spellcheck="true"
+      autocomplete="off"
+      autocorrect="off"
+    ></textarea>
+  </main>
+
+  <!-- Status bar -->
+  <footer
+    class="fixed bottom-0 left-0 right-0 px-6 py-3 flex justify-between items-center font-ui text-sm"
+    style="background-color: #0d0d0b;"
+  >
+    <!-- Left: filename + browser notice -->
+    <div class="flex items-center gap-4">
+      <span
+        class="transition-colors duration-300"
+        :class="statusFlash ? 'flash' : 'text-muted'"
+        x-text="filename"
+      ></span>
+      <template x-if="noFsApi">
+        <span class="text-muted text-xs opacity-60">
+          Your browser doesn't support direct file access — try Chrome or Edge
+          <button @click="noFsApi = false" class="ml-2 opacity-40 hover:opacity-80 transition-opacity">✕</button>
+        </span>
+      </template>
+    </div>
+
+    <!-- Right: counts -->
+    <div class="text-muted flex gap-4 tabular-nums">
+      <span x-text="wordCount + ' words'"></span>
+      <span x-text="charCount + ' chars'"></span>
+    </div>
+  </footer>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    function writer() {
+      return {
+        content: '',
+        filename: 'untitled',
+        fileHandle: null,
+        wordCount: 0,
+        charCount: 0,
+        statusFlash: false,
+        noFsApi: false,
+
+        init() {
+          this.noFsApi = typeof window.showOpenFilePicker === 'undefined'
+          this.$nextTick(() => this.$refs.editor.focus())
+        },
+
+        updateCounts() {
+          const text = this.content
+          this.charCount = text.length
+          this.wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length
+        },
+
+        async openFile() {
+          if (this.noFsApi) return
+          try {
+            const [handle] = await window.showOpenFilePicker({
+              types: [{ description: 'Text files', accept: { 'text/plain': ['.txt'] } }],
+              multiple: false,
+            })
+            this.fileHandle = handle
+            this.filename = handle.name
+            const file = await handle.getFile()
+            this.content = await file.text()
+            this.updateCounts()
+            this.$nextTick(() => this.$refs.editor.focus())
+          } catch (err) {
+            if (err.name !== 'AbortError') console.error(err)
+          }
+        },
+
+        async saveFile() {
+          if (this.noFsApi) return
+          if (this.fileHandle) {
+            await this._writeToHandle(this.fileHandle)
+            this._flash()
+          } else {
+            await this.saveFileAs()
+          }
+        },
+
+        async saveFileAs() {
+          if (this.noFsApi) return
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: this.filename.endsWith('.txt') ? this.filename : this.filename + '.txt',
+              types: [{ description: 'Text files', accept: { 'text/plain': ['.txt'] } }],
+            })
+            this.fileHandle = handle
+            this.filename = handle.name
+            await this._writeToHandle(handle)
+            this._flash()
+          } catch (err) {
+            if (err.name !== 'AbortError') console.error(err)
+          }
+        },
+
+        async _writeToHandle(handle) {
+          const writable = await handle.createWritable()
+          await writable.write(this.content)
+          await writable.close()
+        },
+
+        _flash() {
+          this.statusFlash = true
+          setTimeout(() => { this.statusFlash = false }, 1000)
+        },
+      }
+    }
+  </script>
+</body>
+</html>
