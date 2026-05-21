@@ -16,6 +16,8 @@ module.exports = {
       fontFamily: {
         editor: ['"Courier Prime"', 'Courier', 'monospace'],
         ui: ['"EB Garamond"', 'Georgia', 'serif'],
+        lora: ['"Lora"', 'Georgia', 'serif'],
+        libre: ['"Libre Baskerville"', 'Georgia', 'serif'],
       },
     },
   },

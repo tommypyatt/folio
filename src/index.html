@@ -6,7 +6,7 @@
   <title>Folio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./index.css" />
   <style>
     @keyframes fadeIn {
@@ -51,6 +51,8 @@
   x-init="init()"
   @keydown.ctrl.o.window.prevent="openFile()"
   @keydown.ctrl.s.window.prevent="saveFile()"
+  @keydown.ctrl.p.window.prevent="showOptions ? closeOptions() : openOptions()"
+  @keydown.escape.window="closeOptions()"
 >
 
   <!-- Watermark -->
@@ -67,7 +69,8 @@
       x-ref="editor"
       x-model="content"
       @input="updateCounts()"
-      class="w-full bg-transparent text-ink font-editor resize-none outline-none border-none focus:ring-0 text-writing"
+      class="w-full bg-transparent text-ink resize-none outline-none border-none focus:ring-0 text-writing"
+      :class="{ 'font-lora': font === 'lora', 'font-libre': font === 'libre', 'font-editor': font === 'courier' }"
       style="height: calc(100vh - 240px); overflow-y: auto; caret-color: #7ab896;"
       placeholder=""
       spellcheck="true"
@@ -103,6 +106,29 @@
     </div>
   </footer>
 
+  <!-- Options dialog -->
+  <div
+    x-show="showOptions"
+    x-transition.opacity
+    class="fixed inset-0 z-50 flex items-center justify-center"
+    style="background: rgba(13,13,11,0.85);"
+    @click.self="closeOptions()"
+  >
+    <div class="bg-surface rounded-lg px-8 py-7 w-80 fade-in">
+      <h2 class="font-ui text-xs tracking-widest uppercase opacity-40 mb-5" style="letter-spacing: 0.25em;">Options</h2>
+      <p class="font-ui text-xs text-muted uppercase tracking-widest mb-3" style="letter-spacing: 0.2em;">Font</p>
+      <div class="flex flex-col gap-2">
+        <template x-for="opt in [{id:'lora',label:'Lora',cls:'font-lora'},{id:'libre',label:'Libre Baskerville',cls:'font-libre'},{id:'courier',label:'Courier Prime',cls:'font-editor'}]" :key="opt.id">
+          <button
+            @click="setFont(opt.id)"
+            :class="[opt.cls, 'text-left px-4 py-2 rounded text-base transition-colors duration-150', font === opt.id ? 'text-ink bg-background' : 'text-muted hover:text-ink']"
+            x-text="opt.label"
+          ></button>
+        </template>
+      </div>
+    </div>
+  </div>
+
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script>
     function writer() {
@@ -114,6 +140,8 @@
         charCount: 0,
         statusFlash: false,
         noFsApi: false,
+        showOptions: false,
+        font: localStorage.getItem('folio_font') || 'lora',
 
         init() {
           this.noFsApi = typeof window.showOpenFilePicker === 'undefined'
@@ -187,6 +215,20 @@
         _flash() {
           this.statusFlash = true
           setTimeout(() => { this.statusFlash = false }, 1000)
+        },
+
+        openOptions() {
+          this.showOptions = true
+        },
+
+        closeOptions() {
+          this.showOptions = false
+          this.$nextTick(() => this.$refs.editor.focus())
+        },
+
+        setFont(f) {
+          this.font = f
+          localStorage.setItem('folio_font', f)
         },
       }
     }
