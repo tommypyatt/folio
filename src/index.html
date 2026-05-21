@@ -9,6 +9,28 @@
   <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./index.css" />
   <style>
+    :root, [data-theme="dark"] {
+      --color-bg: #0d0d0b;
+      --color-surface: #111110;
+      --color-ink: #4ade80;
+      --color-muted: #4a4840;
+      --color-accent: #7ab896;
+      --color-flash: #7ab896;
+      --color-overlay: rgba(13,13,11,0.85);
+      --color-scrollbar: rgba(122,184,150,0.35);
+      --color-scrollbar-hover: rgba(122,184,150,0.6);
+    }
+    [data-theme="light"] {
+      --color-bg: #f2f2f2;
+      --color-surface: #e8e8e8;
+      --color-ink: #222222;
+      --color-muted: #888888;
+      --color-accent: #555555;
+      --color-flash: #555555;
+      --color-overlay: rgba(150,150,150,0.6);
+      --color-scrollbar: rgba(100,100,100,0.35);
+      --color-scrollbar-hover: rgba(100,100,100,0.6);
+    }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -17,9 +39,9 @@
       animation: fadeIn 0.6s ease forwards;
     }
     @keyframes flashAccent {
-      0%   { color: #4a4840; }
-      20%  { color: #7ab896; }
-      100% { color: #4a4840; }
+      0%   { color: var(--color-muted); }
+      20%  { color: var(--color-flash); }
+      100% { color: var(--color-muted); }
     }
     .flash {
       animation: flashAccent 1s ease forwards;
@@ -38,10 +60,10 @@
       border-radius: 2px;
     }
     .editor-content.is-scrolling::-webkit-scrollbar-thumb {
-      background-color: rgba(122, 184, 150, 0.35);
+      background-color: var(--color-scrollbar);
     }
     .editor-content.is-scrolling::-webkit-scrollbar-thumb:hover {
-      background-color: rgba(122, 184, 150, 0.6);
+      background-color: var(--color-scrollbar-hover);
     }
     .editor-content p {
       margin: 0;
@@ -55,6 +77,7 @@
   class="bg-background text-ink font-ui"
   x-data="writer()"
   x-init="init()"
+  :data-theme="theme"
   @keydown.ctrl.o.window.prevent="openFile()"
   @keydown.ctrl.s.window.prevent="saveFile()"
   @keydown.ctrl.shift.s.window.prevent="saveFileAs()"
@@ -78,7 +101,7 @@
       @input="onInput()"
       class="w-full bg-transparent text-ink outline-none text-writing editor-content"
       :class="{ 'font-lora': font === 'lora', 'font-libre': font === 'libre', 'font-editor': font === 'courier' }"
-      style="height: calc(100vh - 240px); overflow-y: auto; caret-color: #7ab896;"
+      style="height: calc(100vh - 240px); overflow-y: auto; caret-color: var(--color-accent);"
       spellcheck="false"
     ></div>
   </main>
@@ -86,7 +109,7 @@
   <!-- Status bar -->
   <footer
     class="fixed bottom-0 left-0 right-0 px-6 py-3 flex justify-between items-center font-ui text-sm"
-    style="background-color: #0d0d0b;"
+    style="background-color: var(--color-bg);"
   >
     <!-- Left: filename + browser notice -->
     <div class="flex items-center gap-4">
@@ -115,7 +138,7 @@
     x-show="showOptions"
     x-transition.opacity
     class="fixed inset-0 z-50 flex items-center justify-center"
-    style="background: rgba(13,13,11,0.85);"
+    style="background: var(--color-overlay);"
     @click.self="closeOptions()"
   >
     <div class="bg-surface rounded-lg px-8 py-7 w-80 fade-in">
@@ -126,6 +149,16 @@
           <button
             @click="setFont(opt.id)"
             :class="[opt.cls, 'text-left px-4 py-2 rounded text-base transition-colors duration-150', font === opt.id ? 'text-ink bg-background' : 'text-muted hover:text-ink']"
+            x-text="opt.label"
+          ></button>
+        </template>
+      </div>
+      <p class="font-ui text-xs text-muted uppercase tracking-widest mb-3 mt-5" style="letter-spacing: 0.2em;">Theme</p>
+      <div class="flex flex-col gap-2">
+        <template x-for="opt in [{id:'dark',label:'Dark'},{id:'light',label:'Light'}]" :key="opt.id">
+          <button
+            @click="setTheme(opt.id)"
+            :class="['font-ui text-left px-4 py-2 rounded text-sm transition-colors duration-150', theme === opt.id ? 'text-ink bg-background' : 'text-muted hover:text-ink']"
             x-text="opt.label"
           ></button>
         </template>
@@ -146,6 +179,7 @@
         noFsApi: false,
         showOptions: false,
         font: localStorage.getItem('folio_font') || 'lora',
+        theme: localStorage.getItem('folio_theme') || 'dark',
 
         init() {
           this.noFsApi = typeof window.showOpenFilePicker === 'undefined'
@@ -250,6 +284,11 @@
         setFont(f) {
           this.font = f
           localStorage.setItem('folio_font', f)
+        },
+
+        setTheme(t) {
+          this.theme = t
+          localStorage.setItem('folio_theme', t)
         },
       }
     }

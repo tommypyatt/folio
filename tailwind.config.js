@@ -7,11 +7,11 @@ module.exports = {
         writing: ['18px', { lineHeight: '1.85' }],
       },
       colors: {
-        background: '#0d0d0b',
-        surface: '#111110',
-        ink: '#4ade80',
-        muted: '#4a4840',
-        accent: '#7ab896',
+        background: 'var(--color-bg)',
+        surface: 'var(--color-surface)',
+        ink: 'var(--color-ink)',
+        muted: 'var(--color-muted)',
+        accent: 'var(--color-accent)',
       },
       fontFamily: {
         editor: ['"Courier Prime"', 'Courier', 'monospace'],
