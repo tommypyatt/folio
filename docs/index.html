@@ -27,21 +27,27 @@
     body {
       overflow: hidden;
     }
-    textarea::-webkit-scrollbar {
+    .editor-content::-webkit-scrollbar {
       width: 4px;
     }
-    textarea::-webkit-scrollbar-track {
+    .editor-content::-webkit-scrollbar-track {
       background: transparent;
     }
-    textarea::-webkit-scrollbar-thumb {
+    .editor-content::-webkit-scrollbar-thumb {
       background-color: transparent;
       border-radius: 2px;
     }
-    textarea.is-scrolling::-webkit-scrollbar-thumb {
+    .editor-content.is-scrolling::-webkit-scrollbar-thumb {
       background-color: rgba(122, 184, 150, 0.35);
     }
-    textarea.is-scrolling::-webkit-scrollbar-thumb:hover {
+    .editor-content.is-scrolling::-webkit-scrollbar-thumb:hover {
       background-color: rgba(122, 184, 150, 0.6);
+    }
+    .editor-content p {
+      margin: 0;
+    }
+    .editor-content p + p {
+      margin-top: 1.25em;
     }
   </style>
 </head>
@@ -51,6 +57,7 @@
   x-init="init()"
   @keydown.ctrl.o.window.prevent="openFile()"
   @keydown.ctrl.s.window.prevent="saveFile()"
+  @keydown.ctrl.shift.s.window.prevent="saveFileAs()"
   @keydown.ctrl.p.window.prevent="showOptions ? closeOptions() : openOptions()"
   @keydown.escape.window="closeOptions()"
 >
@@ -65,18 +72,15 @@
 
   <!-- Writing column -->
   <main class="mx-auto px-6 pb-24 fade-in" style="max-width: 680px; padding-top: 80px;">
-    <textarea
+    <div
       x-ref="editor"
-      x-model="content"
-      @input="updateCounts()"
-      class="w-full bg-transparent text-ink resize-none outline-none border-none focus:ring-0 text-writing"
+      contenteditable="true"
+      @input="onInput()"
+      class="w-full bg-transparent text-ink outline-none text-writing editor-content"
       :class="{ 'font-lora': font === 'lora', 'font-libre': font === 'libre', 'font-editor': font === 'courier' }"
       style="height: calc(100vh - 240px); overflow-y: auto; caret-color: #7ab896;"
-      placeholder=""
-      spellcheck="true"
-      autocomplete="off"
-      autocorrect="off"
-    ></textarea>
+      spellcheck="false"
+    ></div>
   </main>
 
   <!-- Status bar -->
@@ -145,7 +149,9 @@
 
         init() {
           this.noFsApi = typeof window.showOpenFilePicker === 'undefined'
+          document.execCommand('defaultParagraphSeparator', false, 'p')
           this.$nextTick(() => {
+            this._setEditorHtml('')
             this.$refs.editor.focus()
             let scrollTimer
             this.$refs.editor.addEventListener('scroll', () => {
@@ -154,6 +160,19 @@
               scrollTimer = setTimeout(() => this.$refs.editor.classList.remove('is-scrolling'), 1000)
             })
           })
+        },
+
+        _setEditorHtml(text) {
+          if (!text) {
+            this.$refs.editor.innerHTML = '<p><br></p>'
+            return
+          }
+          this.$refs.editor.innerHTML = text.split('\n\n').map(l => `<p>${l || '<br>'}</p>`).join('')
+        },
+
+        onInput() {
+          this.content = Array.from(this.$refs.editor.children).map(p => p.textContent).join('\n\n')
+          this.updateCounts()
         },
 
         updateCounts() {
@@ -172,7 +191,9 @@
             this.fileHandle = handle
             this.filename = handle.name
             const file = await handle.getFile()
-            this.content = await file.text()
+            const text = await file.text()
+            this.content = text
+            this._setEditorHtml(text)
             this.updateCounts()
             this.$nextTick(() => this.$refs.editor.focus())
           } catch (err) {
