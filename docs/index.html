@@ -6,14 +6,14 @@
   <title>Folio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./index.css" />
   <style>
     :root, [data-theme="dark"] {
       --color-bg: #0d0d0b;
-      --color-surface: #111110;
+      --color-surface: #272725;
       --color-ink: #4ade80;
-      --color-muted: #4a4840;
+      --color-muted: #7a7870;
       --color-accent: #7ab896;
       --color-flash: #7ab896;
       --color-overlay: rgba(13,13,11,0.85);
@@ -82,7 +82,8 @@
   @keydown.ctrl.s.window.prevent="saveFile()"
   @keydown.ctrl.shift.s.window.prevent="saveFileAs()"
   @keydown.ctrl.p.window.prevent="showOptions ? closeOptions() : openOptions()"
-  @keydown.escape.window="closeOptions()"
+  @keydown.ctrl.i.window.prevent="showIntro ? closeIntro() : openIntro()"
+  @keydown.escape.window="showOptions ? closeOptions() : (showIntro && closeIntro())"
 >
 
   <!-- Watermark -->
@@ -100,8 +101,8 @@
       contenteditable="true"
       @input="onInput()"
       class="w-full bg-transparent text-ink outline-none text-writing editor-content"
-      :class="{ 'font-lora': font === 'lora', 'font-libre': font === 'libre', 'font-editor': font === 'courier' }"
-      style="height: calc(100vh - 240px); overflow-y: auto; caret-color: var(--color-accent);"
+      :class="{ 'font-lora': font === 'lora', 'font-libre': font === 'libre', 'font-editor': font === 'courier', 'font-caveat': font === 'caveat' }"
+      :style="`height: calc(100vh - 240px); overflow-y: auto; caret-color: var(--color-accent); ${font === 'caveat' ? 'font-size: 1.5rem;' : ''}`"
       spellcheck="false"
     ></div>
   </main>
@@ -133,6 +134,33 @@
     </div>
   </footer>
 
+  <!-- Intro dialog -->
+  <div
+    x-show="showIntro"
+    x-transition.opacity
+    class="fixed inset-0 z-50 flex items-center justify-center"
+    style="background: var(--color-overlay);"
+    @click.self="closeIntro()"
+  >
+    <div class="bg-surface rounded-lg px-8 py-7 w-80 fade-in">
+      <h2 class="font-ui text-sm text-ink opacity-40 tracking-widest uppercase mb-4" style="letter-spacing: 0.25em;">Folio</h2>
+      <p class="font-ui text-base text-ink opacity-75 mb-6 leading-relaxed">A minimalist distraction-free writer. Open a file or just start typing — your words, nothing else.</p>
+      <p class="font-ui text-sm text-ink opacity-40 uppercase tracking-widest mb-3" style="letter-spacing: 0.2em;">Shortcuts</p>
+      <div class="flex flex-col gap-2 font-ui text-base">
+        <div class="flex justify-between"><span class="text-ink opacity-75">Open file</span><span class="text-ink opacity-40">Ctrl+O</span></div>
+        <div class="flex justify-between"><span class="text-ink opacity-75">Save</span><span class="text-ink opacity-40">Ctrl+S</span></div>
+        <div class="flex justify-between"><span class="text-ink opacity-75">Save as</span><span class="text-ink opacity-40">Ctrl+Shift+S</span></div>
+        <div class="flex justify-between"><span class="text-ink opacity-75">Preferences</span><span class="text-ink opacity-40">Ctrl+P</span></div>
+        <div class="flex justify-between"><span class="text-ink opacity-75">Show this</span><span class="text-ink opacity-40">Ctrl+I</span></div>
+      </div>
+      <button
+        @click="closeIntro()"
+        class="mt-6 w-full font-ui text-sm text-ink opacity-40 hover:opacity-80 uppercase tracking-widest py-2 rounded transition-opacity"
+        style="letter-spacing: 0.2em;"
+      >Start writing</button>
+    </div>
+  </div>
+
   <!-- Options dialog -->
   <div
     x-show="showOptions"
@@ -142,10 +170,10 @@
     @click.self="closeOptions()"
   >
     <div class="bg-surface rounded-lg px-8 py-7 w-80 fade-in">
-      <h2 class="font-ui text-xs tracking-widest uppercase opacity-40 mb-5" style="letter-spacing: 0.25em;">Options</h2>
+      <h2 class="font-ui text-xs tracking-widest uppercase opacity-40 mb-5" style="letter-spacing: 0.25em;">Preferences</h2>
       <p class="font-ui text-xs text-muted uppercase tracking-widest mb-3" style="letter-spacing: 0.2em;">Font</p>
       <div class="flex flex-col gap-2">
-        <template x-for="opt in [{id:'lora',label:'Lora',cls:'font-lora'},{id:'libre',label:'Libre Baskerville',cls:'font-libre'},{id:'courier',label:'Courier Prime',cls:'font-editor'}]" :key="opt.id">
+        <template x-for="opt in [{id:'lora',label:'Lora',cls:'font-lora'},{id:'libre',label:'Libre Baskerville',cls:'font-libre'},{id:'courier',label:'Courier Prime',cls:'font-editor'},{id:'caveat',label:'Caveat',cls:'font-caveat'}]" :key="opt.id">
           <button
             @click="setFont(opt.id)"
             :class="[opt.cls, 'text-left px-4 py-2 rounded text-base transition-colors duration-150', font === opt.id ? 'text-ink bg-background' : 'text-muted hover:text-ink']"
@@ -155,7 +183,7 @@
       </div>
       <p class="font-ui text-xs text-muted uppercase tracking-widest mb-3 mt-5" style="letter-spacing: 0.2em;">Theme</p>
       <div class="flex flex-col gap-2">
-        <template x-for="opt in [{id:'dark',label:'Dark'},{id:'light',label:'Light'}]" :key="opt.id">
+        <template x-for="opt in [{id:'light',label:'Light'},{id:'dark',label:'Dark'}]" :key="opt.id">
           <button
             @click="setTheme(opt.id)"
             :class="['font-ui text-left px-4 py-2 rounded text-sm transition-colors duration-150', theme === opt.id ? 'text-ink bg-background' : 'text-muted hover:text-ink']"
@@ -178,8 +206,9 @@
         statusFlash: false,
         noFsApi: false,
         showOptions: false,
+        showIntro: !localStorage.getItem('folio_intro_seen'),
         font: localStorage.getItem('folio_font') || 'lora',
-        theme: localStorage.getItem('folio_theme') || 'dark',
+        theme: localStorage.getItem('folio_theme') || 'light',
 
         init() {
           this.noFsApi = typeof window.showOpenFilePicker === 'undefined'
@@ -278,6 +307,16 @@
 
         closeOptions() {
           this.showOptions = false
+          this.$nextTick(() => this.$refs.editor.focus())
+        },
+
+        openIntro() {
+          this.showIntro = true
+        },
+
+        closeIntro() {
+          this.showIntro = false
+          localStorage.setItem('folio_intro_seen', '1')
           this.$nextTick(() => this.$refs.editor.focus())
         },
 

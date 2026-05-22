@@ -18,6 +18,7 @@ module.exports = {
         ui: ['"EB Garamond"', 'Georgia', 'serif'],
         lora: ['"Lora"', 'Georgia', 'serif'],
         libre: ['"Libre Baskerville"', 'Georgia', 'serif'],
+        caveat: ['"Caveat"', 'cursive'],
       },
     },
   },
